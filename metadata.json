@@ -1,0 +1,6 @@
+{
+  "name": "Northorya Forms Studio",
+  "description": "Plataforma proprietária de criação de formulários interativos, auditorias de vida, CRM de leads e gestão de respostas da Northorya.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

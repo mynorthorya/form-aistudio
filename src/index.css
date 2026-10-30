@@ -1,0 +1,200 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Base theme: Dark Light Horya (Default) */
+    --app-bg: #0c0c10;
+    --app-main: #0e0e13;
+    --app-sidebar: #09090d;
+    --app-header: rgba(12, 12, 16, 0.92);
+    --app-card: #141318;
+    --app-card-elevated: #1a1921;
+    --app-border: #222028;
+    --app-border-light: #2d2b37;
+    --app-text-primary: #f5f5f7;
+    --app-text-secondary: #a1a1aa;
+    --app-text-muted: #71717a;
+    --app-accent: #D4AF37;
+    --app-accent-glow: rgba(212, 175, 55, 0.15);
+    --app-input-bg: #101015;
+  }
+
+  /* Light Theme: Horya Champagne, Areia & Linho (as seen on the mobile reference) */
+  [data-theme="light"],
+  .theme-light,
+  html.light {
+    --app-bg: #F7F5F0;
+    --app-main: #FBF9F5;
+    --app-sidebar: #EFECE4;
+    --app-header: rgba(247, 245, 240, 0.92);
+    --app-card: #FFFFFF;
+    --app-card-elevated: #FDFCF9;
+    --app-border: #E2DBD0;
+    --app-border-light: #D4CCC0;
+    --app-text-primary: #1C1917;
+    --app-text-secondary: #57524A;
+    --app-text-muted: #8F887C;
+    --app-accent: #C28B24;
+    --app-accent-glow: rgba(194, 139, 36, 0.14);
+    --app-input-bg: #FFFFFF;
+  }
+
+  /* Dark Theme: Obsidian Puro */
+  [data-theme="dark"],
+  .theme-dark {
+    --app-bg: #050507;
+    --app-main: #050507;
+    --app-sidebar: #08080b;
+    --app-header: rgba(5, 5, 7, 0.92);
+    --app-card: #0e0e13;
+    --app-card-elevated: #15151c;
+    --app-border: #1a1922;
+    --app-border-light: #252430;
+    --app-text-primary: #ededed;
+    --app-text-secondary: #8e8e93;
+    --app-text-muted: #636366;
+    --app-accent: #E5C378;
+    --app-accent-glow: rgba(229, 195, 120, 0.15);
+    --app-input-bg: #0a0a0e;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--app-bg);
+    color: var(--app-text-primary);
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(160, 160, 160, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(160, 160, 160, 0.45);
+}
+
+/* =========================================================================
+   LIGHT THEME ADAPTIVE SYSTEM (Transforms Tailwind dark classes smoothly)
+   ========================================================================= */
+[data-theme="light"],
+.theme-light {
+  color-scheme: light;
+}
+
+/* Canvas & Backgrounds */
+[data-theme="light"] .bg-neutral-950,
+[data-theme="light"] .bg-\[\#0c0c10\],
+[data-theme="light"] .bg-\[\#0a0a0d\] {
+  background-color: var(--app-bg) !important;
+}
+
+[data-theme="light"] .bg-neutral-900\/50,
+[data-theme="light"] .bg-neutral-900\/60,
+[data-theme="light"] .bg-neutral-900\/80,
+[data-theme="light"] .bg-neutral-900 {
+  background-color: var(--app-card) !important;
+}
+
+[data-theme="light"] .bg-\[\#101014\],
+[data-theme="light"] .bg-\[\#121217\],
+[data-theme="light"] .bg-\[\#141318\] {
+  background-color: var(--app-card) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .bg-neutral-950\/60,
+[data-theme="light"] .bg-neutral-950\/70,
+[data-theme="light"] .bg-neutral-950\/80,
+[data-theme="light"] .bg-neutral-950\/90 {
+  background-color: #FBF9F5 !important;
+}
+
+[data-theme="light"] .bg-neutral-800,
+[data-theme="light"] .bg-neutral-800\/80,
+[data-theme="light"] .bg-neutral-800\/90 {
+  background-color: #EDE8DE !important;
+}
+
+[data-theme="light"] .hover\:bg-neutral-800:hover,
+[data-theme="light"] .hover\:bg-neutral-800\/80:hover {
+  background-color: #E5DFD4 !important;
+}
+
+[data-theme="light"] .hover\:bg-neutral-900\/50:hover,
+[data-theme="light"] .hover\:bg-neutral-900\/60:hover {
+  background-color: #F5F1E8 !important;
+}
+
+/* Sidebar & Header */
+[data-theme="light"] aside {
+  background-color: var(--app-sidebar) !important;
+  border-color: var(--app-border) !important;
+}
+
+[data-theme="light"] header {
+  background-color: var(--app-header) !important;
+  border-color: var(--app-border) !important;
+}
+
+/* Borders */
+[data-theme="light"] .border-neutral-800,
+[data-theme="light"] .border-neutral-800\/80,
+[data-theme="light"] .border-neutral-800\/90,
+[data-theme="light"] .border-neutral-700,
+[data-theme="light"] .border-\[\#1f1e24\],
+[data-theme="light"] .border-\[\#222126\],
+[data-theme="light"] .border-\[\#242228\],
+[data-theme="light"] .border-\[\#1c1c22\] {
+  border-color: var(--app-border) !important;
+}
+
+/* Typography */
+[data-theme="light"] .text-neutral-100,
+[data-theme="light"] .text-neutral-200 {
+  color: var(--app-text-primary) !important;
+}
+
+[data-theme="light"] .text-neutral-300,
+[data-theme="light"] .text-neutral-400 {
+  color: var(--app-text-secondary) !important;
+}
+
+[data-theme="light"] .text-neutral-500 {
+  color: var(--app-text-muted) !important;
+}
+
+/* Inputs & Form Elements */
+[data-theme="light"] input:not([type="color"]):not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #FFFFFF !important;
+  color: #1C1917 !important;
+  border-color: #D6CFC3 !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #9C9488 !important;
+}
+
+/* Modal Windows */
+[data-theme="light"] .fixed .bg-neutral-900 {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12) !important;
+}
+[data-theme="light"] .fixed .bg-neutral-950\/40,
+[data-theme="light"] .fixed .bg-neutral-900\/50 {
+  background-color: #F8F6F1 !important;
+}
