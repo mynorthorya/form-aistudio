@@ -3,9 +3,9 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (supports both npm ci and npm install fallback)
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code and build
 COPY . .
@@ -19,15 +19,16 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
+# Copy built application and required runtime files
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/dist-server ./dist-server 2>/dev/null || true
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/src/server ./src/server
 COPY --from=builder /app/src/types ./src/types
 COPY --from=builder /app/src/lib ./src/lib
-COPY --from=builder /app/src/assets ./src/assets
+COPY --from=builder /app/src/assets ./src/assets 2>/dev/null || true
 
 # Create persistent data volume
 RUN mkdir -p /app/data
@@ -36,3 +37,4 @@ VOLUME ["/app/data"]
 EXPOSE 3000
 
 CMD ["npx", "tsx", "server.ts"]
+

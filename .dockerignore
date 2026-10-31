@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+.playwright-cli
+public/northorya-forms-studio.tar.gz
+npm-debug.log*
+.DS_Store
