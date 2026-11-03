@@ -3,7 +3,7 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Install dependencies (suporte nativo glibc para Vite/Rolldown)
+# Install dependencies (suporte nativo glibc)
 COPY package*.json ./
 RUN npm install
 
@@ -25,10 +25,7 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/server.ts ./
-COPY --from=builder /app/src/server ./src/server
-COPY --from=builder /app/src/types ./src/types
-COPY --from=builder /app/src/lib ./src/lib
-COPY --from=builder /app/src/assets ./src/assets 2>/dev/null || true
+COPY --from=builder /app/src ./src
 
 # Create persistent data volume
 RUN mkdir -p /app/data
