@@ -500,17 +500,15 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
           >
             {selectedField ? (
               <div className="space-y-6 flex-1 flex flex-col justify-center">
-                {/* Field Type Tag & Required indicator */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-amber-500">
-                    {selectedField.type.replace('_', ' ')}
-                  </span>
-                  {selectedField.validation?.required && (
-                    <span className="text-[10px] text-rose-400 font-medium">
-                      * Obrigatório
-                    </span>
-                  )}
-                </div>
+                {/* Clean Typeform Step Indicator (No technical labels like DATE, WELCOME SCREEN, etc.) */}
+                {selectedField.type !== 'welcome_screen' && selectedField.type !== 'thank_you_screen' && (
+                  <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-amber-500">
+                    <span>{currentForm.fields.findIndex((f) => f.id === selectedField.id) + 1} →</span>
+                    {selectedField.validation?.required && (
+                      <span className="text-rose-400 font-sans text-sm leading-none" title="Pergunta Obrigatória">*</span>
+                    )}
+                  </div>
+                )}
 
                 {/* Editable Title & Description with Full Multiline & Line Break Support */}
                 <div className="space-y-2">
@@ -531,6 +529,42 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
                     placeholder="Instruções de apoio ou descrição (pressione Enter para quebrar linhas)..."
                   />
                 </div>
+
+                {/* Helper Banner: If user has lines of text in description, offer 1-click conversion to Multiple Choice */}
+                {(selectedField.description || '').split('\n').map((l) => l.trim()).filter(Boolean).length >= 2 &&
+                  selectedField.type !== 'multiple_choice' &&
+                  selectedField.type !== 'multi_select' && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 text-xs animate-in fade-in">
+                      <span className="text-amber-300 text-[11px] flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Detectamos uma lista de opções no texto. Converter para Múltipla Escolha?</span>
+                      </span>
+                      <button
+                        onClick={() => {
+                          const lines = (selectedField.description || '')
+                            .split('\n')
+                            .map((l) => l.trim())
+                            .filter(Boolean);
+                          const newOpts = lines.map((line, idx) => {
+                            const clean = line.replace(/^([a-zA-Z][\.\-\)]|\-|\*|•|\d+[\.\-\)]|\[\s*\])\s*/, '').trim();
+                            return {
+                              id: `opt_${Date.now()}_${idx + 1}`,
+                              label: clean || line,
+                              value: clean || line,
+                            };
+                          });
+                          handleUpdateField({
+                            type: 'multiple_choice',
+                            options: newOpts,
+                            description: '',
+                          });
+                        }}
+                        className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-bold text-[11px] rounded-lg shrink-0 transition-colors cursor-pointer"
+                      >
+                        Converter em Escolhas
+                      </button>
+                    </div>
+                  )}
 
                 {/* Interactive WYSIWYG Mock based on Field Type */}
                 <div className="pt-2">
@@ -560,35 +594,125 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
                     />
                   )}
 
-                  {/* Multiple Choice */}
+                  {/* Date type */}
+                  {selectedField.type === 'date' && (
+                    <div className="flex items-center gap-3 p-3 bg-neutral-900/80 border border-neutral-800 rounded-xl text-xs text-neutral-400 max-w-xs">
+                      <span className="font-mono text-amber-400">📅</span>
+                      <span>DD / MM / AAAA (Calendário)</span>
+                    </div>
+                  )}
+
+                  {/* Multiple Choice - Directly Editable on Slide */}
                   {selectedField.type === 'multiple_choice' && (
                     <div className="space-y-2">
                       {(selectedField.options || []).map((opt, i) => (
                         <div
                           key={opt.id}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-medium text-neutral-200"
+                          className="flex items-center gap-3 p-2.5 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-medium text-neutral-200 group hover:border-neutral-700 transition-colors"
                         >
-                          <span className="w-5 h-5 rounded border border-neutral-700 flex items-center justify-center font-mono text-[10px] text-amber-500">
+                          <span className="w-5 h-5 rounded border border-neutral-700 flex items-center justify-center font-mono text-[10px] text-amber-500 shrink-0">
                             {String.fromCharCode(65 + i)}
                           </span>
-                          <span>{opt.label}</span>
+                          <input
+                            type="text"
+                            value={opt.label}
+                            onChange={(e) => {
+                              const opts = [...(selectedField.options || [])];
+                              opts[i] = { ...opts[i], label: e.target.value, value: e.target.value };
+                              handleUpdateField({ options: opts });
+                            }}
+                            className="bg-transparent flex-1 text-xs text-neutral-100 focus:outline-none"
+                            placeholder="Texto da alternativa..."
+                          />
+                          {(selectedField.options?.length || 0) > 1 && (
+                            <button
+                              onClick={() => {
+                                const opts = [...(selectedField.options || [])];
+                                opts.splice(i, 1);
+                                handleUpdateField({ options: opts });
+                              }}
+                              className="p-1 text-neutral-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
+                              title="Remover alternativa"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
+
+                      {/* Add Option button directly on slide */}
+                      <button
+                        onClick={() => {
+                          const opts = selectedField.options || [];
+                          const newOpt = {
+                            id: `opt_${Date.now()}`,
+                            label: `Nova Alternativa ${opts.length + 1}`,
+                            value: `Nova Alternativa ${opts.length + 1}`,
+                          };
+                          handleUpdateField({ options: [...opts, newOpt] });
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 font-semibold rounded-lg border border-dashed border-neutral-800 hover:border-amber-500/40 w-full justify-center transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Adicionar Alternativa</span>
+                      </button>
                     </div>
                   )}
 
-                  {/* Multi Select */}
+                  {/* Multi Select - Directly Editable on Slide */}
                   {selectedField.type === 'multi_select' && (
                     <div className="space-y-2">
                       {(selectedField.options || []).map((opt) => (
                         <div
                           key={opt.id}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-medium text-neutral-200"
+                          className="flex items-center gap-3 p-2.5 rounded-xl border border-neutral-800 bg-neutral-900/60 text-xs font-medium text-neutral-200 group hover:border-neutral-700 transition-colors"
                         >
-                          <div className="w-4 h-4 rounded border border-neutral-700" />
-                          <span>{opt.label}</span>
+                          <div className="w-4 h-4 rounded border border-neutral-700 shrink-0" />
+                          <input
+                            type="text"
+                            value={opt.label}
+                            onChange={(e) => {
+                              const opts = [...(selectedField.options || [])];
+                              const idx = opts.findIndex((o) => o.id === opt.id);
+                              if (idx !== -1) {
+                                opts[idx] = { ...opts[idx], label: e.target.value, value: e.target.value };
+                                handleUpdateField({ options: opts });
+                              }
+                            }}
+                            className="bg-transparent flex-1 text-xs text-neutral-100 focus:outline-none"
+                            placeholder="Texto da alternativa..."
+                          />
+                          {(selectedField.options?.length || 0) > 1 && (
+                            <button
+                              onClick={() => {
+                                const opts = (selectedField.options || []).filter((o) => o.id !== opt.id);
+                                handleUpdateField({ options: opts });
+                              }}
+                              className="p-1 text-neutral-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
+                              title="Remover alternativa"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       ))}
+
+                      {/* Add Option button directly on slide */}
+                      <button
+                        onClick={() => {
+                          const opts = selectedField.options || [];
+                          const newOpt = {
+                            id: `opt_${Date.now()}`,
+                            label: `Nova Alternativa ${opts.length + 1}`,
+                            value: `Nova Alternativa ${opts.length + 1}`,
+                          };
+                          handleUpdateField({ options: [...opts, newOpt] });
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 font-semibold rounded-lg border border-dashed border-neutral-800 hover:border-amber-500/40 w-full justify-center transition-colors cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Adicionar Alternativa</span>
+                      </button>
                     </div>
                   )}
 
@@ -708,12 +832,6 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
                 Nenhum campo selecionado
               </div>
             )}
-
-            {/* Bottom Preview Footnote */}
-            <div className="pt-6 border-t border-neutral-900 flex items-center justify-between text-[11px] text-neutral-500">
-              <span>Northorya Forms Engine</span>
-              <span>Modo: {currentForm.settings.mode}</span>
-            </div>
           </div>
         </main>
 

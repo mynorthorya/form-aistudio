@@ -248,10 +248,6 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
             ) : null}
           </div>
         </div>
-
-        <div className={`text-center text-[11px] ${isLight ? 'text-stone-400' : 'text-neutral-600'}`}>
-          Northorya Forms Studio · Governança Pessoal e Humana
-        </div>
       </div>
     );
   }
@@ -485,17 +481,6 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
           )}
         </div>
       </main>
-
-      {/* Footer Branding & LGPD notice */}
-      <footer className="p-6 text-center text-xs text-neutral-500 border-t border-neutral-900/60 max-w-4xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5">
-          <Lock className="w-3.5 h-3.5 text-neutral-600" />
-          <span>Dados protegidos e tratados sob a LGPD com sigilo profissional.</span>
-        </span>
-        <span className="font-semibold tracking-wider text-neutral-400 text-[11px]">
-          NORTHORYA FORMS
-        </span>
-      </footer>
     </div>
   );
 };

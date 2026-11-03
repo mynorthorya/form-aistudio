@@ -25,7 +25,7 @@ export function parseFormFromRawText(rawText: string, fallbackTitle?: string): P
   const lines = rawText.split('\n').map((l) => l.trim()).filter(Boolean);
 
   let formTitle = fallbackTitle || 'Novo Formulário Estruturado';
-  let formDesc = 'Formulário gerado automaticamente a partir de texto estruturado.';
+  let formDesc = 'Diagnóstico e questionário estruturado.';
 
   const fields: FormField[] = [
     {
@@ -41,52 +41,78 @@ export function parseFormFromRawText(rawText: string, fallbackTitle?: string): P
   let currentField: Partial<FormField> | null = null;
   let fieldCounter = 1;
 
-  for (const line of lines) {
-    // Check if line looks like a title at the beginning
-    if (fields.length === 1 && !line.match(/^(\d+[\.\-\)]|[Qq]\d+|\*|-)/) && line.length < 80 && !currentField) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check if line looks like an explicit title at the beginning
+    if (fields.length === 1 && !currentField) {
       if (line.toLowerCase().startsWith('título:') || line.toLowerCase().startsWith('titulo:')) {
-        formTitle = line.replace(/t[ií]tulo:\s*/i, '');
+        formTitle = line.replace(/t[ií]tulo:\s*/i, '').trim();
         fields[0].title = formTitle;
         continue;
       }
     }
 
-    // Question line matching: e.g. "1. Qual seu nome?", "Pergunta 2: ...", "Q3) ..."
-    const questionMatch = line.match(/^(\d+[\.\-\)]|[Qq]\d+[\.\-\):]|\*)\s*(.+)/);
+    // Question line matching: e.g. "1. Qual seu nome?", "Pergunta 2: ...", line ending with "?", or line containing "?"
+    const numberedMatch = line.match(/^(\d+[\.\-\)]|[Qq]\d+[\.\-\):]|\*|\-)\s*(.+)/);
+    const endsWithQuestion = line.endsWith('?') || (line.includes('?') && line.length < 200);
+    const startsWithKeyword = /^(pergunta|questão|diagnóstico|item)\s*\d*[\:\.\-]/i.test(line);
 
-    if (questionMatch) {
+    const isQuestion =
+      (numberedMatch && (numberedMatch[2].includes('?') || !numberedMatch[2].match(/^[a-zA-Z0-9\s]{1,3}$/))) ||
+      endsWithQuestion ||
+      startsWithKeyword;
+
+    if (isQuestion && !line.match(/^([a-zA-Z][\.\-\)]|\-|\*|•)\s+/)) {
       if (currentField && currentField.title) {
         fields.push(finalizeField(currentField, fieldCounter++));
       }
 
-      const qText = questionMatch[2].trim();
+      const qText = numberedMatch ? numberedMatch[2].trim() : line.trim();
       currentField = detectFieldFromQuestionText(qText);
       continue;
     }
 
-    // Option line matching: e.g. "a) Opção 1", "- Sim", "1 - Discordo", "* Opção"
-    const optionMatch = line.match(/^([a-zA-Z][\.\-\)]|\-|\*|\d+[\.\-\)])\s*(.+)/);
-    if (optionMatch && currentField) {
-      const optLabel = optionMatch[2].trim();
+    // Option line matching: e.g. "a) Opção 1", "- Sim", "1 - Discordo", "* Opção", "• Opção", or plain lines following a question
+    const optionPrefixMatch = line.match(/^([a-zA-Z][\.\-\)]|\-|\*|•|\d+[\.\-\)]|\[\s*\])\s*(.+)/);
+    
+    // Check if this line is an option: either has bullet prefix OR current question is active and line is short without question mark
+    const isUnbulletedOption =
+      currentField &&
+      !line.includes('?') &&
+      line.length < 140 &&
+      (currentField.type === 'multiple_choice' ||
+       currentField.type === 'multi_select' ||
+       (currentField.options && currentField.options.length > 0) ||
+       /^(quais|qual|selecione|escolha|assinale|marque)\b/i.test(currentField.title || ''));
+
+    if ((optionPrefixMatch || isUnbulletedOption) && currentField) {
+      const optLabel = optionPrefixMatch ? optionPrefixMatch[2].trim() : line.trim();
       currentField.options = currentField.options || [];
       currentField.options.push({
         id: `opt_${Date.now()}_${currentField.options.length + 1}`,
         label: optLabel,
         value: optLabel,
       });
-      // Switch type to multiple_choice if it was short_text
-      if (currentField.type === 'short_text') {
-        currentField.type = 'multiple_choice';
+
+      // Automatically upgrade type to multiple_choice if it was previously short_text or date
+      if (currentField.type === 'short_text' || currentField.type === 'date') {
+        const titleLower = (currentField.title || '').toLowerCase();
+        if (titleLower.includes('quais') || titleLower.includes('selecione todas') || titleLower.includes('todas as')) {
+          currentField.type = 'multi_select';
+        } else {
+          currentField.type = 'multiple_choice';
+        }
       }
       continue;
     }
 
-    // Additional description or instructions
+    // Additional description or instructions for the current question
     if (currentField) {
       if (!currentField.description) {
         currentField.description = line;
       } else {
-        currentField.description += ` ${line}`;
+        currentField.description += `\n${line}`;
       }
     }
   }
@@ -110,8 +136,8 @@ export function parseFormFromRawText(rawText: string, fallbackTitle?: string): P
   fields.push({
     id: `f_thank_you_${Date.now()}`,
     type: 'thank_you_screen',
-    title: 'Respostas Registradas',
-    description: 'Agradecemos pelo seu tempo. Suas informações foram salvas com segurança.',
+    title: 'Respostas Registradas com Sucesso',
+    description: 'Agradecemos pelo seu tempo e transparência. Seus dados foram salvos com segurança.',
     validation: {},
     properties: { buttonText: 'Concluir' },
   });
@@ -128,30 +154,33 @@ function detectFieldFromQuestionText(text: string): Partial<FormField> {
   let type: FormFieldType = 'short_text';
   let required = true;
 
-  if (lower.includes('nome')) {
+  if (/\b(nome|nome completo|seu nome)\b/i.test(lower)) {
     type = 'full_name';
-  } else if (lower.includes('e-mail') || lower.includes('email')) {
+  } else if (/\b(email|e-mail)\b/i.test(lower)) {
     type = 'email';
-  } else if (lower.includes('whatsapp') || lower.includes('telefone') || lower.includes('celular') || lower.includes('phone')) {
+  } else if (/\b(whatsapp|telefone|celular|fone|contato)\b/i.test(lower)) {
     type = 'phone';
-  } else if (lower.includes('instagram') || lower.includes('@')) {
+  } else if (/\b(instagram|@)\b/i.test(lower)) {
     type = 'instagram';
     required = false;
-  } else if (lower.includes('descreva') || lower.includes('explique') || lower.includes('detalhe') || lower.includes('comente') || lower.includes('conte sobre')) {
+  } else if (/\b(quais|quais das|selecione todas|assinale todas)\b/i.test(lower)) {
+    type = 'multi_select';
+  } else if (/\b(qual das|qual dos|escolha uma|marque a opção)\b/i.test(lower)) {
+    type = 'multiple_choice';
+  } else if (/\b(descreva|explique|detalhe|comente|conte sobre|escreva detalhadamente|em suas palavras)\b/i.test(lower)) {
     type = 'long_text';
-  } else if (lower.includes('escala de 0 a 10') || lower.includes('de 0 a 10') || lower.includes('nota de 0 a 10')) {
+  } else if (/\b(escala de 0 a 10|de 0 a 10|nota de 0 a 10|de zero a dez)\b/i.test(lower)) {
     type = 'opinion_scale';
-  } else if (lower.includes('estrelas') || lower.includes('de 1 a 5 estrelas')) {
+  } else if (/\b(estrelas|de 1 a 5 estrelas|avaliação de 1 a 5)\b/i.test(lower)) {
     type = 'rating_stars';
-  } else if (lower.includes('de 1 a 5') || lower.includes('escala de 1 a 5')) {
-    type = 'rating_scale';
-  } else if (lower.includes('nps') || lower.includes('recomenda') || lower.includes('indicaria')) {
+  } else if (/\b(nps|recomendaria|indicaria|probabilidade de indicar)\b/i.test(lower)) {
     type = 'nps';
-  } else if (lower.includes('sim ou não') || lower.includes('sim/não') || lower.endsWith('? (sim/não)')) {
+  } else if (/\b(sim ou não|sim\/não|\(s\/n\))\b/i.test(lower) || lower.endsWith('? (sim/não)')) {
     type = 'yes_no';
-  } else if (lower.includes('data') || lower.includes('quando') || lower.includes('previsão')) {
+  } else if (/\b(data de nascimento|qual a data|em qual data|qual data|data do evento|data de início)\b/i.test(lower)) {
+    // Only match real dates, NEVER match on conversational "quando você..."
     type = 'date';
-  } else if (lower.includes('concorda') || lower.includes('lgpd') || lower.includes('termos') || lower.includes('autorizo')) {
+  } else if (/\b(concorda|lgpd|termos|autorizo|privacidade|consentimento)\b/i.test(lower)) {
     type = 'consent';
   }
 
@@ -201,23 +230,31 @@ export async function generateFormFromText(rawText: string, suggestedTitle?: str
 
   try {
     const prompt = `Você é o arquiteto de formulários e diagnósticos da NORTHORYA, empresa de tecnologia de governança pessoal e desenvolvimento humano.
-Sua missão é transformar o texto bruto fornecido pelo usuário em um formulário profissional e completo.
+Sua missão é transformar o texto bruto fornecido pelo usuário em um formulário profissional e completo no padrão Typeform.
 
 Analise cada pergunta, contexto, opções e intenção do usuário no texto abaixo:
 """
 ${rawText}
 """
 
+REGRAS CRÍTICAS DE CONVERSÃO:
+1. PERGUNTAS COM OPÇÕES: Quando uma pergunta for seguida por alternativas de resposta (sejam numeradas, com letras A-B-C, marcadores de traço ou linhas soltas de texto):
+   - O tipo "type" DEVE ser obrigatoriamente "multiple_choice" (se for escolha única) ou "multi_select" (se puder marcar mais de uma).
+   - Coloque TODAS as alternativas de resposta dentro do array "options" como [{"label": "Texto da opção", "value": "Texto da opção"}].
+   - NUNCA jogue as alternativas de resposta dentro do campo "description"!
+2. TIPO "DATE" (DATA): Use "date" EXCLUSIVAMENTE para perguntas que pedem uma data de calendário real (ex: "Data de nascimento", "Qual data você prefere?"). NUNCA use "date" para perguntas reflexivas que começam com "Quando você..." (ex: "Quando você pensa no seu momento atual..." é multiple_choice ou long_text, JAMAIS date!).
+3. PRESERVAÇÃO TOTAL: Mantenha todos os detalhes, nuances, alternativas e textos exatos enviados pelo usuário.
+
 Retorne um JSON estrito contendo:
-- "title": Título elegante e executivo do formulário (sugestão: "${suggestedTitle || 'Diagnóstico Estruturado'}").
-- "description": Descrição de apoio clara e acolhedora.
+- "title": Título elegante do formulário (sugestão: "${suggestedTitle || 'Diagnóstico Estruturado'}").
+- "description": Descrição de apoio.
 - "fields": Lista estruturada com TODAS as perguntas identificadas no texto:
-  - "type": Escolha o melhor entre: "short_text", "long_text", "full_name", "email", "phone", "instagram", "number", "multiple_choice", "multi_select", "dropdown", "yes_no", "opinion_scale", "rating_stars", "rating_scale", "nps", "date", "consent".
+  - "type": Escolha entre: "multiple_choice", "multi_select", "dropdown", "short_text", "long_text", "full_name", "email", "phone", "instagram", "number", "yes_no", "opinion_scale", "rating_stars", "rating_scale", "nps", "date", "consent".
   - "title": O enunciado da pergunta, limpo e direto.
-  - "description": Instruções adicionais de apoio (opcional).
+  - "description": Instruções de apoio adicionais (opcional, sem incluir as opções).
   - "placeholder": Exemplo de resposta (opcional).
   - "required": booleano se o campo é obrigatório.
-  - "options": lista de opções [{"label": "Opção 1", "value": "Opção 1"}] se for multiple_choice, multi_select ou dropdown.
+  - "options": lista de opções [{"label": "...", "value": "..."}] para multiple_choice, multi_select ou dropdown.
   - "properties": objeto opcional com minScaleLabel, maxScaleLabel se for opinion_scale, ou consentText se for consent.
 
 Inclua também no início da lista uma tela de boas-vindas ("welcome_screen") e no final uma tela de encerramento ("thank_you_screen").`;

@@ -543,14 +543,24 @@ export const SettingsView: React.FC = () => {
               </p>
             </div>
 
-            <a
-              href="/northorya-forms-studio.tar.gz"
-              download="northorya-forms-studio.tar.gz"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-bold rounded-xl text-xs shadow-lg shadow-amber-500/10 transition-all shrink-0 cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>Baixar Código Fonte Completo (.tar.gz)</span>
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href="/northorya-forms-studio.zip"
+                download="northorya-forms-studio.zip"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-neutral-950 font-bold rounded-xl text-xs shadow-lg shadow-amber-500/10 transition-all shrink-0 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Baixar Projeto (.ZIP)</span>
+              </a>
+              <a
+                href="/northorya-forms-studio.tar.gz"
+                download="northorya-forms-studio.tar.gz"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 font-medium rounded-xl text-xs transition-all shrink-0 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-neutral-400" />
+                <span>.TAR.GZ</span>
+              </a>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-neutral-800/80 text-[11px] text-neutral-400">

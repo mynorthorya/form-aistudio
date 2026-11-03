@@ -212,12 +212,14 @@ app.get('/api/export', (_req: Request, res: Response) => {
   res.json(state);
 });
 
-// Export Full Source Code Archive (.tar.gz)
-app.get('/api/export-project', (_req: Request, res: Response) => {
-  const archivePath = path.resolve(__dirname, 'public', 'northorya-forms-studio.tar.gz');
+// Export Full Source Code Archive (.tar.gz and .zip)
+app.get('/api/export-project', (req: Request, res: Response) => {
+  const isZip = req.query.format === 'zip';
+  const filename = isZip ? 'northorya-forms-studio.zip' : 'northorya-forms-studio.tar.gz';
+  const archivePath = path.resolve(__dirname, 'public', filename);
   if (fs.existsSync(archivePath)) {
-    res.setHeader('Content-Type', 'application/gzip');
-    res.setHeader('Content-Disposition', 'attachment; filename="northorya-forms-studio.tar.gz"');
+    res.setHeader('Content-Type', isZip ? 'application/zip' : 'application/gzip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     return res.sendFile(archivePath);
   }
   res.status(404).json({ error: 'Arquivo do projeto não encontrado' });

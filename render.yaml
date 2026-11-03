@@ -1,0 +1,18 @@
+# Render.com Blueprint Specification for Northorya Forms Studio
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: northorya-forms
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: GEMINI_API_KEY
+        sync: false

@@ -50,3 +50,31 @@ Título: Diagnóstico de Equilíbrio Emocional
   const consentField = parsed.fields?.find((f) => f.type === 'consent');
   assert.ok(consentField);
 });
+
+test('ai-generator: parseFormFromRawText handles "Quando você pensa... quais..." with unbulleted option lines', () => {
+  const promptText = `
+Quando você pensa no seu momento atual, quais experiências internas mais gostaria de compreender ou transformar?
+Emoções difíceis de administrar
+Pensamentos excessivos ou dificuldade de desacelerar
+Padrões que continuam se repetindo
+Dificuldade de tomar decisões
+Medos e inseguranças
+Necessidade de controle
+Dificuldade de estabelecer limites
+Dificuldade de me expressar
+Sensação de desconexão ou vazio
+Questões relacionadas ao passado
+Não consigo identificar claramente o que preciso
+Outra: ___
+`;
+
+  const parsed = parseFormFromRawText(promptText);
+  assert.ok(parsed.fields && parsed.fields.length >= 2);
+  const qField = parsed.fields.find((f) => f.type !== 'welcome_screen' && f.type !== 'thank_you_screen')!;
+  assert.ok(qField, 'Question field should exist');
+  // Must NOT be 'date'
+  assert.notEqual(qField.type, 'date');
+  assert.ok(qField.type === 'multiple_choice' || qField.type === 'multi_select');
+  assert.ok(qField.options && qField.options.length >= 10);
+  assert.equal(qField.options[0].label, 'Emoções difíceis de administrar');
+});
