@@ -1,9 +1,10 @@
 # NORTHORYA FORMS STUDIO - DOCKERFILE
+# Using Debian slim for full glibc compatibility with native bindings (Vite/Rolldown/esbuild)
 FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Install dependencies (suporte nativo glibc)
+# Install dependencies (supports glibc native bindings without npm musl bugs)
 COPY package*.json ./
 RUN npm install
 
@@ -34,3 +35,4 @@ VOLUME ["/app/data"]
 EXPOSE 3000
 
 CMD ["npx", "tsx", "server.ts"]
+

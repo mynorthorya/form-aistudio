@@ -220,11 +220,11 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
             <CheckCircle2 className="w-8 h-8" />
           </div>
 
-          <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${isLight ? 'text-stone-900' : 'text-neutral-100'}`}>
+          <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight whitespace-pre-wrap break-words leading-snug ${isLight ? 'text-stone-900' : 'text-neutral-100'}`}>
             {thankYouField?.title || 'Respostas Registradas com Sucesso'}
           </h2>
 
-          <p className={`text-sm ${isLight ? 'text-stone-600' : 'text-neutral-400'} leading-relaxed max-w-md mx-auto`}>
+          <p className={`text-sm ${isLight ? 'text-stone-600' : 'text-neutral-400'} leading-relaxed max-w-md mx-auto whitespace-pre-wrap break-words`}>
             {thankYouField?.description ||
               'Agradecemos sua colaboração e transparência. Seus dados foram salvos com segurança no ecossistema Northorya.'}
           </p>
@@ -349,11 +349,11 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
 
                 {/* Field Title & Description */}
                 <div className="space-y-2">
-                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-100">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-100 whitespace-pre-wrap break-words leading-snug">
                     {currentField.title}
                   </h2>
                   {currentField.description && (
-                    <p className="text-sm text-neutral-400 leading-relaxed">
+                    <p className="text-sm text-neutral-400 leading-relaxed whitespace-pre-wrap break-words">
                       {currentField.description}
                     </p>
                   )}
@@ -441,7 +441,7 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
                         <span className="text-xs font-mono text-amber-500 font-bold">
                           {idx + 1}.
                         </span>
-                        <h3 className="text-base sm:text-lg font-bold text-neutral-100">
+                        <h3 className="text-base sm:text-lg font-bold text-neutral-100 whitespace-pre-wrap break-words leading-snug">
                           {field.title}
                         </h3>
                         {field.validation?.required && (
@@ -449,7 +449,7 @@ export const PublicFormRenderer: React.FC<PublicFormRendererProps> = ({
                         )}
                       </div>
                       {field.description && (
-                        <p className="text-xs text-neutral-400">
+                        <p className="text-xs text-neutral-400 leading-relaxed whitespace-pre-wrap break-words">
                           {field.description}
                         </p>
                       )}

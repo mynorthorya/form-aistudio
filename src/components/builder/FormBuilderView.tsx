@@ -63,39 +63,97 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [activeDevicePreview, setActiveDevicePreview] = useState<'desktop' | 'mobile'>('desktop');
 
-  // Sync internal state when external prop changes
+  // Refs to manage debounce and prevent parent prop overwrite during typing
+  const saveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const latestFormRef = React.useRef<Form>(form);
+  const isDirtyRef = React.useRef(false);
+  const formIdRef = React.useRef(form.id);
+
+  // Auto-resize refs for slide canvas
+  const titleTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const descTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // Sync internal state when external prop changes ONLY if switching forms
+  // or when there are no dirty uncommitted local typing edits
   useEffect(() => {
-    setCurrentForm(form);
-    if (!selectedFieldId && form.fields.length > 0) {
-      setSelectedFieldId(form.fields[0].id);
+    if (form.id !== formIdRef.current) {
+      formIdRef.current = form.id;
+      setCurrentForm(form);
+      latestFormRef.current = form;
+      isDirtyRef.current = false;
+      if (form.fields.length > 0) {
+        setSelectedFieldId(form.fields[0].id);
+      }
+    } else if (!isDirtyRef.current) {
+      // Safe background update of status/version without interrupting active inputs
+      setCurrentForm((prev) => ({
+        ...prev,
+        version: form.version,
+        status: form.status,
+        slug: form.slug,
+      }));
+      latestFormRef.current = form;
     }
   }, [form]);
 
-  // Debounced Autosave
+  // Clean timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Rock-solid Debounced Autosave: never creates orphan timers or swaps letters
   const triggerAutosave = (updated: Form) => {
     setCurrentForm(updated);
+    latestFormRef.current = updated;
+    isDirtyRef.current = true;
     setSaveStatus('saving');
-    const timer = setTimeout(async () => {
+
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    saveTimerRef.current = setTimeout(async () => {
       try {
+        const toSave = latestFormRef.current;
         await onSaveForm({
-          title: updated.title,
-          description: updated.description,
-          fields: updated.fields,
-          rules: updated.rules,
-          theme: updated.theme,
-          settings: updated.settings,
+          title: toSave.title,
+          description: toSave.description,
+          fields: toSave.fields,
+          rules: toSave.rules,
+          theme: toSave.theme,
+          settings: toSave.settings,
         });
-        setSaveStatus('saved');
+
+        // Only mark clean if no newer keystrokes arrived during network round-trip
+        if (latestFormRef.current === toSave) {
+          isDirtyRef.current = false;
+          setSaveStatus('saved');
+        }
       } catch (err) {
         console.error('Error autosaving form:', err);
         setSaveStatus('saved');
       }
-    }, 800);
-    return () => clearTimeout(timer);
+    }, 1000);
   };
 
   const selectedField =
     currentForm.fields.find((f) => f.id === selectedFieldId) || null;
+
+  // Dynamically auto-expand canvas textareas to fit multiline content without clipping
+  useEffect(() => {
+    if (titleTextareaRef.current) {
+      titleTextareaRef.current.style.height = 'auto';
+      titleTextareaRef.current.style.height = `${Math.max(titleTextareaRef.current.scrollHeight, 36)}px`;
+    }
+    if (descTextareaRef.current) {
+      descTextareaRef.current.style.height = 'auto';
+      descTextareaRef.current.style.height = `${Math.max(descTextareaRef.current.scrollHeight, 44)}px`;
+    }
+  }, [selectedFieldId, selectedField?.title, selectedField?.description]);
 
   // Add field handler
   const handleAddField = (type: FormFieldType) => {
@@ -454,22 +512,23 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
                   )}
                 </div>
 
-                {/* Editable Title */}
-                <div>
-                  <input
-                    type="text"
+                {/* Editable Title & Description with Full Multiline & Line Break Support */}
+                <div className="space-y-2">
+                  <textarea
+                    ref={titleTextareaRef}
+                    rows={1}
                     value={selectedField.title}
                     onChange={(e) => handleUpdateField({ title: e.target.value })}
-                    className="w-full bg-transparent text-xl sm:text-2xl font-bold tracking-tight text-neutral-100 focus:outline-none focus:bg-neutral-900/40 rounded px-1.5 py-1"
+                    className="w-full bg-transparent text-xl sm:text-2xl font-bold tracking-tight text-neutral-100 focus:outline-none focus:bg-neutral-900/40 rounded px-1.5 py-1 resize-none whitespace-pre-wrap leading-snug overflow-hidden block"
                     placeholder="Digite o título da pergunta..."
                   />
-                  {/* Editable Description */}
-                  <input
-                    type="text"
+                  <textarea
+                    ref={descTextareaRef}
+                    rows={2}
                     value={selectedField.description || ''}
                     onChange={(e) => handleUpdateField({ description: e.target.value })}
-                    className="w-full bg-transparent text-xs sm:text-sm text-neutral-400 focus:outline-none focus:bg-neutral-900/40 rounded px-1.5 py-1 mt-1"
-                    placeholder="Instruções de apoio ou descrição..."
+                    className="w-full bg-transparent text-xs sm:text-sm text-neutral-400 focus:outline-none focus:bg-neutral-900/40 rounded px-1.5 py-1 resize-none whitespace-pre-wrap leading-relaxed overflow-hidden block"
+                    placeholder="Instruções de apoio ou descrição (pressione Enter para quebrar linhas)..."
                   />
                 </div>
 
@@ -614,10 +673,25 @@ export const FormBuilderView: React.FC<FormBuilderViewProps> = ({
 
                   {/* Welcome Screen */}
                   {selectedField.type === 'welcome_screen' && (
-                    <div className="pt-4">
-                      <button className="px-6 py-2.5 bg-amber-600 text-neutral-950 font-bold rounded-xl text-xs shadow-md">
-                        {selectedField.properties?.buttonText || 'Iniciar Auditoria'}
-                      </button>
+                    <div className="pt-4 flex flex-wrap items-center gap-3">
+                      <input
+                        type="text"
+                        value={selectedField.properties?.buttonText || 'Iniciar Preenchimento'}
+                        onChange={(e) =>
+                          handleUpdateField({
+                            properties: {
+                              ...selectedField.properties,
+                              buttonText: e.target.value,
+                            },
+                          })
+                        }
+                        className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold rounded-xl text-xs shadow-md focus:outline-none focus:ring-2 focus:ring-amber-300 transition-all cursor-text min-w-[160px]"
+                        placeholder="Texto do botão..."
+                        title="Clique para editar o texto do botão"
+                      />
+                      <span className="text-[11px] text-neutral-500">
+                        (Editar texto do botão)
+                      </span>
                     </div>
                   )}
 

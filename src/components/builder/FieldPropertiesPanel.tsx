@@ -102,29 +102,35 @@ export const FieldPropertiesPanel: React.FC<FieldPropertiesPanelProps> = ({
 
         {/* Title */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-neutral-300">
-            Título da Pergunta
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-neutral-300">
+              Título da Pergunta
+            </label>
+            <span className="text-[10px] text-neutral-500 font-mono">Suporta Enter</span>
+          </div>
           <textarea
-            rows={2}
+            rows={Math.max(2, (field.title || '').split('\n').length)}
             value={field.title}
             onChange={(e) => onUpdateField({ title: e.target.value })}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-amber-500/60 resize-none"
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-amber-500/60 resize-y whitespace-pre-wrap leading-relaxed"
             placeholder="Qual pergunta você quer fazer?"
           />
         </div>
 
         {/* Description / Instructions */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-semibold text-neutral-300">
-            Instrução ou Descrição Adicional
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-semibold text-neutral-300">
+              Instrução ou Descrição Adicional
+            </label>
+            <span className="text-[10px] text-amber-500/80 font-mono">Quebras de linha (Enter)</span>
+          </div>
           <textarea
-            rows={2}
+            rows={Math.max(3, (field.description || '').split('\n').length)}
             value={field.description || ''}
             onChange={(e) => onUpdateField({ description: e.target.value })}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-amber-500/60 resize-none"
-            placeholder="Instruções de apoio opcionais"
+            className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-amber-500/60 resize-y whitespace-pre-wrap leading-relaxed"
+            placeholder="Instruções de apoio opcionais (pressione Enter para novos parágrafos)"
           />
         </div>
 

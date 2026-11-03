@@ -1,6 +1,138 @@
 {
   "forms": [
     {
+      "id": "form_1793713704573",
+      "slug": "form-3r1iv",
+      "title": "Nova Auditoria Comportamental",
+      "description": "Questionário reflexivo e diagnóstico de governança pessoal.",
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-03T13:48:24.573Z",
+      "updatedAt": "2026-11-03T13:48:24.573Z",
+      "stats": {
+        "views": 0,
+        "starts": 0,
+        "completions": 0
+      },
+      "theme": {
+        "id": "theme_default",
+        "name": "Northorya Dark",
+        "primaryColor": "#D97706",
+        "backgroundColor": "#09090b",
+        "textColor": "#f4f4f5",
+        "cardColor": "#18181b",
+        "borderRadius": "rounded-xl",
+        "fontFamily": "Plus Jakarta Sans"
+      },
+      "settings": {
+        "mode": "conversational",
+        "showProgressBar": true,
+        "allowKeyboardNavigation": true
+      },
+      "rules": [],
+      "fields": [
+        {
+          "id": "f_welcome_1793713704573",
+          "type": "welcome_screen",
+          "title": "Nova Auditoria Comportamental",
+          "description": "Clique abaixo para iniciar seu preenchimento.",
+          "validation": {},
+          "properties": {
+            "buttonText": "Iniciar"
+          }
+        },
+        {
+          "id": "f_nome_1793713704573",
+          "type": "full_name",
+          "title": "Qual o seu nome completo?",
+          "validation": {
+            "required": true
+          }
+        },
+        {
+          "id": "f_email_1793713704573",
+          "type": "email",
+          "title": "Qual o seu e-mail?",
+          "validation": {
+            "required": true
+          }
+        },
+        {
+          "id": "f_thanks_1793713704573",
+          "type": "thank_you_screen",
+          "title": "Obrigado!",
+          "description": "Suas respostas foram registradas com sucesso.",
+          "validation": {}
+        }
+      ]
+    },
+    {
+      "id": "form_1793713576181",
+      "slug": "form-5vgqz",
+      "title": "Nova Auditoria Comportamental",
+      "description": "Questionário reflexivo e diagnóstico de governança pessoal.",
+      "status": "draft",
+      "version": 1,
+      "createdAt": "2026-11-03T13:46:16.181Z",
+      "updatedAt": "2026-11-03T13:46:26.561Z",
+      "stats": {
+        "views": 0,
+        "starts": 0,
+        "completions": 0
+      },
+      "theme": {
+        "id": "theme_default",
+        "name": "Northorya Dark",
+        "primaryColor": "#D97706",
+        "backgroundColor": "#09090b",
+        "textColor": "#f4f4f5",
+        "cardColor": "#18181b",
+        "borderRadius": "rounded-xl",
+        "fontFamily": "Plus Jakarta Sans"
+      },
+      "settings": {
+        "mode": "conversational",
+        "showProgressBar": true,
+        "allowKeyboardNavigation": true
+      },
+      "rules": [],
+      "fields": [
+        {
+          "id": "f_welcome_1793713576181",
+          "type": "welcome_screen",
+          "title": "Nova Auditoria Comportamental",
+          "description": "Esta pesquisa busca compreender melhor as necessidades, interesses e desafios atuais das pessoas.\\n\\nPor favor, responda com sinceridade cada pergunta a seguir.",
+          "validation": {},
+          "properties": {
+            "buttonText": "Iniciar"
+          }
+        },
+        {
+          "id": "f_nome_1793713576181",
+          "type": "full_name",
+          "title": "Qual o seu nome completo?",
+          "validation": {
+            "required": true
+          }
+        },
+        {
+          "id": "f_email_1793713576181",
+          "type": "email",
+          "title": "Qual o seu e-mail?",
+          "validation": {
+            "required": true
+          }
+        },
+        {
+          "id": "f_thanks_1793713576181",
+          "type": "thank_you_screen",
+          "title": "Obrigado!",
+          "description": "Suas respostas foram registradas com sucesso.",
+          "validation": {}
+        }
+      ]
+    },
+    {
       "id": "form_1793281503198",
       "slug": "form-w4bms",
       "title": "Diagnóstico de Maturidade Profissional",
